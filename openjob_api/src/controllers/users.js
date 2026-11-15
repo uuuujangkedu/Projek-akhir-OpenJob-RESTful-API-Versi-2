@@ -16,10 +16,11 @@ const createUser = async (req, res) => {
 };
 
 const getUserById = async (req, res) => {
-  const user = await service.findById(req.params.id);
-  if (!user) throw new NotFoundError('User tidak ditemukan');
+  const result = await service.getUserById(req.params.id);
+  if (!result.data) throw new NotFoundError('User tidak ditemukan');
 
-  res.status(200).json({ status: 'success', data: user });
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: result.data });
 };
 
 module.exports = { createUser, getUserById };

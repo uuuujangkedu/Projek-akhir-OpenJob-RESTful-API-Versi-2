@@ -11,12 +11,12 @@ const getProfile = async (req, res) => {
 };
 
 const getProfileApplications = async (req, res) => {
-  const applications = await applicationService.getApplicationsByUser(req.auth.id);
+  const { data: applications } = await applicationService.getApplicationsByUser(req.auth.id);
   res.status(200).json({ status: 'success', data: { applications } });
 };
 
 const getProfileBookmarks = async (req, res) => {
-  const bookmarks = await bookmarkService.getBookmarksByUser(req.auth.id);
+  const { data: bookmarks } = await bookmarkService.getBookmarksByUser(req.auth.id);
   res.status(200).json({ status: 'success', data: { bookmarks } });
 };
 

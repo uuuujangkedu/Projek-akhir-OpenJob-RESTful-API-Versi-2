@@ -12,10 +12,11 @@ const getCompanies = async (req, res) => {
 };
 
 const getCompanyById = async (req, res) => {
-  const company = await service.getCompanyById(req.params.id);
-  if (!company) throw new NotFoundError('Company tidak ditemukan');
+  const result = await service.getCompanyById(req.params.id);
+  if (!result.data) throw new NotFoundError('Company tidak ditemukan');
 
-  res.status(200).json({ status: 'success', data: company });
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: result.data });
 };
 
 const updateCompany = async (req, res) => {

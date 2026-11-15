@@ -13,7 +13,7 @@ const createApplication = async (req, res) => {
   }
 
   const id = await service.createApplication({ user_id, job_id, status });
-  res.status(201).json({ status: 'success', data: { id } });
+  res.status(201).json({ status: 'success', data: { id, user_id, job_id, status } });
 };
 
 const getApplications = async (req, res) => {
@@ -22,20 +22,23 @@ const getApplications = async (req, res) => {
 };
 
 const getApplicationById = async (req, res) => {
-  const application = await service.getApplicationById(req.params.id);
-  if (!application) throw new NotFoundError('Application tidak ditemukan');
+  const result = await service.getApplicationById(req.params.id);
+  if (!result.data) throw new NotFoundError('Application tidak ditemukan');
 
-  res.status(200).json({ status: 'success', data: application });
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: result.data });
 };
 
 const getApplicationsByUser = async (req, res) => {
-  const applications = await service.getApplicationsByUser(req.params.userId);
-  res.status(200).json({ status: 'success', data: { applications } });
+  const result = await service.getApplicationsByUser(req.params.userId);
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: { applications: result.data } });
 };
 
 const getApplicationsByJob = async (req, res) => {
-  const applications = await service.getApplicationsByJob(req.params.jobId);
-  res.status(200).json({ status: 'success', data: { applications } });
+  const result = await service.getApplicationsByJob(req.params.jobId);
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: { applications: result.data } });
 };
 
 const updateApplication = async (req, res) => {

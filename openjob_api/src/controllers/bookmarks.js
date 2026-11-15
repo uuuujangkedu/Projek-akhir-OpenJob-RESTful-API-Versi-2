@@ -6,7 +6,8 @@ const createBookmark = async (req, res) => {
   const { jobId } = req.params;
   const userId = req.auth.id;
 
-  if (!(await jobService.getJobById(jobId))) throw new NotFoundError('Job tidak ditemukan');
+  const jobRes = await jobService.getJobById(jobId);
+  if (!jobRes) throw new NotFoundError('Job tidak ditemukan');
   if (await service.findByUserAndJob(userId, jobId)) {
     throw new InvariantError('Job sudah di-bookmark');
   }
@@ -30,8 +31,9 @@ const deleteBookmark = async (req, res) => {
 };
 
 const getMyBookmarks = async (req, res) => {
-  const bookmarks = await service.getBookmarksByUser(req.auth.id);
-  res.status(200).json({ status: 'success', data: { bookmarks } });
+  const result = await service.getBookmarksByUser(req.auth.id);
+  res.setHeader('X-Data-Source', result.dataSource);
+  res.status(200).json({ status: 'success', data: { bookmarks: result.data } });
 };
 
 module.exports = { createBookmark, getBookmarkById, deleteBookmark, getMyBookmarks };

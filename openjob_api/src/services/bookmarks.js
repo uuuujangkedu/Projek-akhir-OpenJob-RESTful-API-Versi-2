@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const generateId = require('../utils/id');
+const { getCache, setCache, delCache } = require('../config/redis');
 
 const createBookmark = async (userId, jobId) => {
   const id = generateId('bookmark');
@@ -7,6 +8,7 @@ const createBookmark = async (userId, jobId) => {
     'INSERT INTO bookmarks (id, user_id, job_id) VALUES ($1, $2, $3)',
     [id, userId, jobId],
   );
+  await delCache(`bookmarks_user_${userId}`);
   return id;
 };
 
@@ -28,12 +30,22 @@ const deleteBookmark = async (userId, jobId) => {
     'DELETE FROM bookmarks WHERE user_id = $1 AND job_id = $2',
     [userId, jobId],
   );
+  if (rowCount) {
+    await delCache(`bookmarks_user_${userId}`);
+  }
   return rowCount;
 };
 
 const getBookmarksByUser = async (userId) => {
+  const cacheKey = `bookmarks_user_${userId}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return { data: JSON.parse(cached), dataSource: 'cache' };
+  }
+
   const { rows } = await pool.query('SELECT * FROM bookmarks WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
-  return rows;
+  await setCache(cacheKey, JSON.stringify(rows), 3600);
+  return { data: rows, dataSource: 'database' };
 };
 
 module.exports = {

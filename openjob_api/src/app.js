@@ -8,6 +8,7 @@ const jobsRouter = require('./routes/jobs');
 const applicationsRouter = require('./routes/applications');
 const bookmarksRouter = require('./routes/bookmarks');
 const profileRouter = require('./routes/profile');
+const documentsRouter = require('./routes/documents');
 
 const notFound = require('./middlewares/notFound');
 const errorHandler = require('./middlewares/errorHandler');
@@ -23,6 +24,7 @@ app.use(bookmarksRouter); // /jobs/:jobId/bookmark* + /bookmarks (didaftarkan se
 app.use(jobsRouter);
 app.use(applicationsRouter);
 app.use(profileRouter);
+app.use(documentsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
