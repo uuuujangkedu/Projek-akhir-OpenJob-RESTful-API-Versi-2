@@ -4,14 +4,13 @@ const app = require('./app');
 const { initRedis } = require('./config/redis');
 const { initRabbitMQ } = require('./config/rabbitmq');
 
-const host = process.env.HOST || 'localhost';
+const host = process.env.HOST || '0.0.0.0';
 const port = Number(process.env.PORT) || 3000;
 
-const start = async () => {
-  await Promise.all([initRedis(), initRabbitMQ()]);
-  app.listen(port, host, () => {
-    console.log(`OpenJob API berjalan di http://${host}:${port}`);
-  });
-};
+app.listen(port, host, () => {
+  console.log(`OpenJob API berjalan di http://${host}:${port}`);
+});
 
-start();
+// ponytail: Redis/RabbitMQ opsional dan tidak boleh menahan listen — cache/publish sudah di-guard di config-nya
+initRedis();
+initRabbitMQ();
