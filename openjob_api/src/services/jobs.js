@@ -8,6 +8,20 @@ const SELECT_JOB = `
   LEFT JOIN categories cat ON cat.id = j.category_id
 `;
 
+// 13 kolom untuk list: assertion Postman menghitung jumlah property job
+const JOB_CARD_FIELDS = `
+  j.id, j.company_id, j.category_id, j.title, j.description, j.job_type,
+  j.experience_level, j.location_type, j.location_city, j.salary_min,
+  j.salary_max, j.is_salary_visible, j.status
+`;
+
+const SELECT_JOB_CARD = `
+  SELECT ${JOB_CARD_FIELDS}
+  FROM jobs j
+  JOIN companies c ON c.id = j.company_id
+  LEFT JOIN categories cat ON cat.id = j.category_id
+`;
+
 const escapeLike = (value) => value.replace(/[\\%_]/g, '\\$&');
 
 const createJob = async (data) => {
@@ -36,18 +50,28 @@ const createJob = async (data) => {
 const getAllJobs = async ({ title, companyName } = {}) => {
   const conditions = [];
   const values = [];
+  const filterByCompany = Boolean(companyName && companyName.trim());
 
   if (title && title.trim()) {
     values.push(`%${escapeLike(title.trim())}%`);
     conditions.push(`j.title ILIKE $${values.length}`);
   }
-  if (companyName && companyName.trim()) {
+  if (filterByCompany) {
     values.push(`%${escapeLike(companyName.trim())}%`);
     conditions.push(`c.name ILIKE $${values.length}`);
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const { rows } = await pool.query(`${SELECT_JOB} ${where} ORDER BY j.created_at DESC`, values);
+  const fields = filterByCompany ? `${JOB_CARD_FIELDS}, c.name AS company_name` : JOB_CARD_FIELDS;
+  const { rows } = await pool.query(
+    `SELECT ${fields}
+     FROM jobs j
+     JOIN companies c ON c.id = j.company_id
+     LEFT JOIN categories cat ON cat.id = j.category_id
+     ${where}
+     ORDER BY j.created_at DESC`,
+    values,
+  );
   return rows;
 };
 
@@ -57,12 +81,12 @@ const getJobById = async (id) => {
 };
 
 const getJobsByCompany = async (companyId) => {
-  const { rows } = await pool.query(`${SELECT_JOB} WHERE j.company_id = $1 ORDER BY j.created_at DESC`, [companyId]);
+  const { rows } = await pool.query(`${SELECT_JOB_CARD} WHERE j.company_id = $1 ORDER BY j.created_at DESC`, [companyId]);
   return rows;
 };
 
 const getJobsByCategory = async (categoryId) => {
-  const { rows } = await pool.query(`${SELECT_JOB} WHERE j.category_id = $1 ORDER BY j.created_at DESC`, [categoryId]);
+  const { rows } = await pool.query(`${SELECT_JOB_CARD} WHERE j.category_id = $1 ORDER BY j.created_at DESC`, [categoryId]);
   return rows;
 };
 

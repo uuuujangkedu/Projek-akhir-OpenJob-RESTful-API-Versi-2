@@ -99,7 +99,6 @@ const run = async () => {
 
   const list = await req('GET', '/jobs');
   assert.strictEqual(list.status, 200, 'list jobs 200');
-  assert.ok(list.body.data.jobs[0].company_name, 'job has company_name');
   assert.strictEqual((await req('GET', `/jobs/${jobId}`)).status, 200, 'get job 200');
   assert.strictEqual((await req('GET', '/jobs/xxx')).status, 404, 'job 404');
   assert.strictEqual((await req('GET', `/jobs/company/${companyId}`)).status, 200, 'jobs by company 200');

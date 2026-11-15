@@ -43,7 +43,15 @@ const getBookmarksByUser = async (userId) => {
     return { data: JSON.parse(cached), dataSource: 'cache' };
   }
 
-  const { rows } = await pool.query('SELECT * FROM bookmarks WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+  const { rows } = await pool.query(
+    `SELECT bookmarks.*, jobs.*, companies.name AS company_name
+     FROM bookmarks
+     JOIN jobs ON jobs.id = bookmarks.job_id
+     JOIN companies ON companies.id = jobs.company_id
+     WHERE bookmarks.user_id = $1
+     ORDER BY bookmarks.created_at DESC`,
+    [userId],
+  );
   await setCache(cacheKey, JSON.stringify(rows), 3600);
   return { data: rows, dataSource: 'database' };
 };

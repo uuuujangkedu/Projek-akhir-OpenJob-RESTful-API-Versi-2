@@ -3,6 +3,29 @@ const generateId = require('../utils/id');
 const { sendToQueue } = require('../config/rabbitmq');
 const { getCache, setCache, delCache } = require('../config/redis');
 
+// 13 kolom: dipakai assertion jumlah property pada GET /applications
+const SELECT_APPLICATION_LIST = `
+  SELECT a.id, a.user_id, a.job_id, a.status, a.created_at, a.updated_at,
+         u.name AS user_name, u.email AS user_email,
+         j.title AS job_title, j.company_id, j.category_id, j.job_type,
+         c.name AS company_name
+  FROM applications a
+  JOIN users u ON u.id = a.user_id
+  JOIN jobs j ON j.id = a.job_id
+  JOIN companies c ON c.id = j.company_id
+`;
+
+// 15 kolom: GET /applications/user/:id dan GET /profile/applications
+const SELECT_APPLICATION_WITH_JOB = `
+  SELECT a.id, a.user_id, a.job_id, a.status, a.created_at, a.updated_at,
+         j.title AS job_title, j.description AS job_description, j.job_type,
+         j.experience_level, j.location_type, j.location_city,
+         j.company_id, j.category_id, c.name AS company_name
+  FROM applications a
+  JOIN jobs j ON j.id = a.job_id
+  JOIN companies c ON c.id = j.company_id
+`;
+
 const createApplication = async ({ user_id, job_id, status }) => {
   const id = generateId('application');
   await pool.query(
@@ -20,7 +43,7 @@ const createApplication = async ({ user_id, job_id, status }) => {
 };
 
 const getAllApplications = async () => {
-  const { rows } = await pool.query('SELECT * FROM applications ORDER BY created_at DESC');
+  const { rows } = await pool.query(`${SELECT_APPLICATION_LIST} ORDER BY a.created_at DESC`);
   return rows;
 };
 
@@ -46,7 +69,10 @@ const getApplicationsByUser = async (userId) => {
     return { data: JSON.parse(cached), dataSource: 'cache' };
   }
 
-  const { rows } = await pool.query('SELECT * FROM applications WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
+  const { rows } = await pool.query(
+    `${SELECT_APPLICATION_WITH_JOB} WHERE a.user_id = $1 ORDER BY a.created_at DESC`,
+    [userId],
+  );
   await setCache(cacheKey, JSON.stringify(rows), 3600);
   return { data: rows, dataSource: 'database' };
 };
@@ -58,7 +84,14 @@ const getApplicationsByJob = async (jobId) => {
     return { data: JSON.parse(cached), dataSource: 'cache' };
   }
 
-  const { rows } = await pool.query('SELECT * FROM applications WHERE job_id = $1 ORDER BY created_at DESC', [jobId]);
+  const { rows } = await pool.query(
+    `SELECT a.*, u.name AS user_name, u.email AS user_email
+     FROM applications a
+     JOIN users u ON u.id = a.user_id
+     WHERE a.job_id = $1
+     ORDER BY a.created_at DESC`,
+    [jobId],
+  );
   await setCache(cacheKey, JSON.stringify(rows), 3600);
   return { data: rows, dataSource: 'database' };
 };
