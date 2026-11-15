@@ -49,6 +49,7 @@ Project ini independen dari `openjob_consumer`; keduanya berkomunikasi lewat Rab
 | `npm run db:reset` | reset DB (down + up) sebelum run Newman |
 | `npm run smoke` | uji end-to-end cepat (butuh DB + migrasi) |
 | `npm run test:postman` | jalankan koleksi Postman V2 via Newman |
+| `npm run test:postman:fresh` | reset DB lalu jalankan koleksi V2 |
 
 ## Uji
 

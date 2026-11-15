@@ -11,7 +11,8 @@
     "migrate:down": "node-pg-migrate -j js down 999",
     "db:reset": "npm run migrate:down && npm run migrate:up",
     "smoke": "node scripts/smoke.js",
-    "test:postman": "newman run \"postman/[271] OpenJob API Test V2.postman_collection.json\" -e \"postman/OpenJob API.postman_environment.json\""
+    "test:postman": "newman run \"postman/[271] OpenJob API Test V2.postman_collection.json\" -e \"postman/OpenJob API.postman_environment.json\"",
+    "test:postman:fresh": "npm run db:reset && npm run test:postman"
   },
   "dependencies": {
     "amqplib": "^2.3.1",
